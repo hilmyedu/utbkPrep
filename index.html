@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTBK Prep Desktop OS & Workspace</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script defer src="https://unpkg.com/mathlive"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { 'grid-bg':'#f5f2e9','retro-green':'#6b7a63','retro-green-dark':'#4f5c49','retro-border':'#3d3a34','retro-card':'#fcfaf2','retro-folder':'#e3bd68','retro-yellow':'#f0d38d','retro-pink':'#d67b8c' },
+  fontFamily: { mono:['"Space Mono"','monospace'], sans:['"Plus Jakarta Sans"','sans-serif'] }
+}}}
+</script>
+<style>
+body{background-color:#f5f2e9;background-image:linear-gradient(rgba(107,122,99,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(107,122,99,.12) 1px,transparent 1px);background-size:24px 24px;font-family:'Plus Jakarta Sans',sans-serif;color:#3d3a34}
+.retro-window{border:2px solid #3d3a34;box-shadow:4px 4px 0 rgba(61,58,52,.25);background:#fcfaf2}
+.retro-btn{border:2px solid #3d3a34;box-shadow:2px 2px 0 #3d3a34;transition:all .1s}
+.retro-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 #3d3a34}
+.retro-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 #3d3a34}
+.desktop-icon{transition:transform .15s}.desktop-icon:hover{transform:translateY(-2px)}
+#editor{min-height:60vh;outline:none;font-size:.9rem;line-height:1.7;white-space:pre-wrap}
+#editor ul{list-style:disc;padding-left:1.5rem}#editor ol{list-style:decimal;padding-left:1.5rem}
+#editor h1{font-size:1.3rem;font-weight:800}#editor h2{font-size:1.1rem;font-weight:700}
+#editor img{max-width:100%;border:1px solid #3d3a34;border-radius:4px;margin:4px 0}
+.soal-card{white-space:normal;border:2px solid #3d3a34;border-radius:8px;background:#fffbeb;padding:12px;margin:14px 0;position:relative;user-select:text}
+.soal-card .q-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px}
+.soal-card .q-actions button{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;background:#fff;border:1.5px solid #3d3a34;border-radius:4px;padding:1px 6px}
+.soal-card .q-actions button:hover{background:#f0d38d}
+.soal-card .q-body{white-space:pre-wrap}
+.soal-card .opt{display:flex;gap:8px;align-items:center;padding:5px 8px;margin-top:4px;border:1px solid rgba(61,58,52,.35);border-radius:6px;background:#fff}
+.soal-card .opt.key{background:#dcfce7;border-color:#4ade80;font-weight:700}
+.soal-card .opt b{font-family:'Space Mono',monospace;font-size:10px;border:1px solid #3d3a34;border-radius:4px;padding:0 5px;background:#f5f2e9}
+.soal-card .pemb{margin-top:10px;background:#ecfdf5;border:1px solid rgba(107,122,99,.4);border-radius:6px;padding:8px 10px;font-size:.85rem;white-space:pre-wrap}
+.soal-card .lbl{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#4f5c49;display:block;margin-bottom:2px}
+.pdfing .q-actions{display:none}
+.katex-display{margin:.4em 0!important;padding:.3em;overflow-x:auto}
+math-field{width:100%;font-size:1.5rem;padding:8px;border:2px solid #3d3a34;border-radius:6px;background:#fff}
+</style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+<header class="bg-retro-green text-white px-4 py-1.5 border-b-2 border-retro-border flex justify-between items-center flex-shrink-0">
+  <span class="font-mono font-bold text-xs sm:text-sm"><i class="fa-solid fa-graduation-cap text-retro-yellow mr-2"></i>UTBK_STUDIO_OS</span>
+  <div class="flex items-center gap-2 font-mono text-[11px]">
+    <button onclick="exportDataJSON()" class="retro-btn bg-white text-retro-border px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-file-export text-retro-green"></i> Export</button>
+    <label class="retro-btn bg-retro-yellow text-retro-border px-2 py-0.5 rounded font-bold cursor-pointer"><i class="fa-solid fa-file-import"></i> Import<input type="file" accept=".json" onchange="importDataJSON(event)" class="hidden"></label>
+    <button onclick="openModal('modal-folder')" class="retro-btn bg-retro-yellow text-retro-border px-2 py-0.5 rounded font-bold">+ Folder</button>
+    <span id="clock" class="bg-retro-green-dark px-2 py-0.5 rounded border border-retro-border hidden sm:block">00:00:00</span>
+  </div>
+</header>
+
+<div class="flex-1 relative overflow-hidden">
+
+  <!-- DESKTOP -->
+  <section id="view-desktop" class="absolute inset-0 p-4 sm:p-8 flex flex-col justify-between overflow-y-auto">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start max-w-7xl mx-auto w-full">
+      <div class="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-1 gap-4" id="desktop-folders-left"></div>
+
+      <div class="md:col-span-6 retro-window rounded-lg overflow-hidden my-2 md:my-0">
+        <div class="bg-retro-green px-3 py-2 border-b-2 border-retro-border flex justify-between items-center">
+          <span class="font-mono text-xs text-white font-bold tracking-wide"><i class="fa-solid fa-terminal mr-1.5 text-retro-yellow"></i> C:\UTBK\Overview</span>
+          <div class="flex space-x-1">
+            <span class="w-3 h-3 bg-yellow-400 border border-retro-border rounded-full inline-block"></span>
+            <span class="w-3 h-3 bg-green-400 border border-retro-border rounded-full inline-block"></span>
+            <span class="w-3 h-3 bg-red-400 border border-retro-border rounded-full inline-block"></span>
+          </div>
+        </div>
+        <div class="p-5 space-y-4">
+          <div class="flex items-center space-x-4 border-b-2 border-retro-border/20 pb-4">
+            <div class="w-16 h-16 rounded-full bg-retro-folder border-2 border-retro-border flex items-center justify-center text-3xl text-retro-border font-bold shadow-sm"><i class="fa-solid fa-user-astronaut"></i></div>
+            <div>
+              <h2 class="font-mono font-bold text-lg text-retro-border">UTBK Prep Target 2026</h2>
+              <p class="text-xs text-gray-600 font-mono">Persiapan SNBT & UTBK - Multi-Soal, Catatan & LaTeX</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 font-mono text-center text-xs">
+            <div class="bg-white border-2 border-retro-border p-2 rounded"><span class="block text-gray-500 text-[10px]">TOTAL FOLDER</span><strong id="stat-folders" class="text-base text-retro-green">0</strong></div>
+            <div class="bg-white border-2 border-retro-border p-2 rounded"><span class="block text-gray-500 text-[10px]">TOTAL FILE</span><strong id="stat-notes" class="text-base text-retro-green">0</strong></div>
+            <div class="bg-white border-2 border-retro-border p-2 rounded"><span class="block text-gray-500 text-[10px]">TOTAL SOAL</span><strong id="stat-soal" class="text-base text-retro-green">0</strong></div>
+          </div>
+          <div class="bg-retro-yellow/30 border-2 border-retro-border p-3 rounded text-xs space-y-1.5">
+            <span class="font-mono font-bold text-retro-green-dark block"><i class="fa-solid fa-circle-info mr-1"></i> Fitur Utama:</span>
+            <ul class="list-disc pl-4 space-y-1 text-gray-700">
+              <li><strong>Satu Editor:</strong> Tulis catatan bebas, lalu blok teks soal dan klik <em>Rapikan jadi Soal</em> untuk mengubahnya jadi kartu soal yang rapi.</li>
+              <li><strong>Multi-Soal dalam 1 File:</strong> Banyak soal (A-E) beserta pembahasannya, bercampur dengan catatan.</li>
+              <li><strong>PDF Download & JSON Backup:</strong> Ekspor hasil belajar kapan saja.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-1 gap-4" id="desktop-folders-right"></div>
+    </div>
+
+    <div class="max-w-md mx-auto w-full bg-retro-green border-2 border-retro-border p-2 rounded-lg flex justify-around items-center text-white font-mono text-xs shadow-md mt-6">
+      <button onclick="openModal('modal-folder')" class="hover:text-retro-yellow flex items-center gap-1 font-bold"><i class="fa-solid fa-folder-plus"></i> + Buat Folder</button>
+      <span class="text-retro-border">|</span>
+      <span id="desktop-status-text" class="text-[11px] text-retro-yellow truncate">Ready to Study!</span>
+    </div>
+  </section>
+
+  <!-- FOLDER MODAL -->
+  <section id="view-folder" class="absolute inset-0 bg-black/40 flex items-center justify-center p-4 z-40 hidden">
+    <div class="retro-window w-full max-w-2xl rounded-lg overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="bg-retro-green px-4 py-2 border-b-2 border-retro-border flex justify-between items-center">
+        <span id="folder-title" class="font-mono text-xs text-white font-bold truncate"></span>
+        <div class="flex items-center gap-3 flex-shrink-0"><button onclick="deleteFolder(state.folderId)" class="text-white hover:text-retro-pink font-mono text-[11px] font-bold"><i class="fa-solid fa-trash"></i> Hapus Folder</button><button onclick="closeFolder()" class="text-white hover:text-retro-pink font-mono text-base font-bold">&times;</button></div>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-3">
+        <div class="flex justify-end"><button onclick="createNote()" class="retro-btn bg-retro-green text-white font-mono text-xs px-2.5 py-1 rounded font-bold"><i class="fa-solid fa-file-circle-plus"></i> + File Baru</button></div>
+        <div id="folder-files" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKSPACE (SATU EDITOR) -->
+  <section id="view-workspace" class="absolute inset-0 bg-grid-bg flex flex-col z-20 hidden">
+    <div class="bg-retro-green text-white px-3 py-1.5 border-b-2 border-retro-border flex items-center gap-2 flex-shrink-0">
+      <button onclick="closeWorkspace()" class="retro-btn bg-retro-yellow text-retro-border font-mono text-xs px-2.5 py-0.5 rounded font-bold"><i class="fa-solid fa-arrow-left"></i> Desktop</button>
+      <input id="note-title" oninput="scheduleSave()" placeholder="Judul catatan..." class="flex-1 min-w-0 bg-white text-retro-border border-2 border-retro-border rounded px-2 py-0.5 text-xs font-mono font-bold focus:outline-none">
+      <span id="save-state" class="font-mono text-[10px] text-retro-yellow hidden sm:block"></span>
+      <button onclick="toggleView()" id="btn-view" class="retro-btn bg-white text-retro-border font-mono text-xs px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-eye"></i> Tampilan</button>
+      <button onclick="downloadPDF()" class="retro-btn bg-white text-retro-border font-mono text-xs px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-file-pdf text-red-600"></i> PDF</button>
+      <button onclick="saveNote()" class="retro-btn bg-white text-retro-border font-mono text-xs px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-floppy-disk text-retro-green"></i> Simpan</button>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div id="toolbar" class="bg-retro-card border-b-2 border-retro-border p-1.5 flex flex-wrap gap-1 items-center font-mono text-[11px] flex-shrink-0">
+      <button onmousedown="event.preventDefault()" onclick="convertSelection()" class="retro-btn bg-retro-green text-white px-2.5 py-1 rounded font-bold"><i class="fa-solid fa-wand-magic-sparkles text-retro-yellow"></i> Rapikan jadi Soal</button>
+      <span class="text-gray-300">|</span>
+      <button onmousedown="event.preventDefault()" onclick="execCmd('bold')" class="tb font-bold">B</button>
+      <button onmousedown="event.preventDefault()" onclick="execCmd('italic')" class="tb italic">I</button>
+      <button onmousedown="event.preventDefault()" onclick="execCmd('underline')" class="tb underline">U</button>
+      <button onmousedown="event.preventDefault()" onclick="execCmd('formatBlock','<h1>')" class="tb font-bold">H1</button>
+      <button onmousedown="event.preventDefault()" onclick="execCmd('formatBlock','<h2>')" class="tb font-bold">H2</button>
+      <button onmousedown="event.preventDefault()" onclick="execCmd('insertUnorderedList')" class="tb"><i class="fa-solid fa-list-ul"></i></button>
+      <button onmousedown="event.preventDefault()" onclick="execCmd('insertOrderedList')" class="tb"><i class="fa-solid fa-list-ol"></i></button>
+      <button onmousedown="event.preventDefault()" onclick="execCmd('hiliteColor','#fef08a')" class="tb bg-yellow-200"><i class="fa-solid fa-highlighter"></i></button>
+      <button onmousedown="event.preventDefault()" onclick="pickImage()" class="tb"><i class="fa-solid fa-image"></i></button>
+      <span class="text-gray-300">|</span>
+      <button onmousedown="event.preventDefault()" onclick="openMathEditor()" class="tb bg-retro-yellow font-bold"><i class="fa-solid fa-keyboard"></i> Rumus</button>
+      <span id="math-btns" class="flex flex-wrap gap-1"></span>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-3 sm:p-6">
+      <div id="paper" class="retro-window rounded-lg p-5 sm:p-8 max-w-3xl mx-auto min-h-full">
+        <div id="editor" contenteditable="true" spellcheck="false"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- MODAL FOLDER -->
+<div id="modal-folder" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+  <div class="retro-window w-full max-w-sm rounded-lg overflow-hidden">
+    <div class="bg-retro-green px-4 py-2 border-b-2 border-retro-border flex justify-between"><span class="font-mono text-xs text-white font-bold">BUAT FOLDER BARU</span><button onclick="closeModal('modal-folder')" class="text-white font-bold">&times;</button></div>
+    <form onsubmit="saveFolder(event)" class="p-4 space-y-3">
+      <input id="new-folder-name" required placeholder="Contoh: Biologi, Fisika" class="w-full bg-white border-2 border-retro-border rounded p-2 text-xs focus:outline-none">
+      <div><span class="font-mono text-[11px] font-bold">Pilih ikon:</span><div id="new-folder-icons" class="flex flex-wrap gap-1 mt-1"></div></div>
+      <div class="flex justify-end gap-2"><button type="button" onclick="closeModal('modal-folder')" class="retro-btn bg-gray-200 font-mono text-xs px-3 py-1 rounded">Batal</button><button class="retro-btn bg-retro-green text-white font-mono text-xs font-bold px-3 py-1 rounded">Simpan</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL GANTI IKON -->
+<div id="modal-icon" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+  <div class="retro-window w-full max-w-sm rounded-lg overflow-hidden">
+    <div class="bg-retro-green px-4 py-2 border-b-2 border-retro-border flex justify-between"><span class="font-mono text-xs text-white font-bold">GANTI IKON FOLDER</span><button onclick="closeModal('modal-icon')" class="text-white font-bold">&times;</button></div>
+    <div id="icon-grid" class="p-4 flex flex-wrap gap-1.5"></div>
+  </div>
+</div>
+
+<!-- MODAL RUMUS -->
+<div id="modal-math" class="fixed inset-0 bg-black/50 flex items-start justify-center p-4 pt-14 z-50 hidden">
+  <div class="retro-window w-full max-w-xl rounded-lg overflow-hidden">
+    <div class="bg-retro-green px-4 py-2 border-b-2 border-retro-border flex justify-between"><span class="font-mono text-xs text-white font-bold">EDITOR RUMUS</span><button onclick="closeMathEditor()" class="text-white font-bold">&times;</button></div>
+    <div class="p-4 space-y-3">
+      <math-field id="mf" math-virtual-keyboard-policy="manual"></math-field>
+      <label class="flex items-center gap-2 font-mono text-xs font-bold"><input type="checkbox" id="mf-display"> Tampilkan sebagai blok sendiri (display)</label>
+      <div class="flex justify-between">
+        <button onclick="toggleKb()" class="retro-btn bg-white font-mono text-xs px-3 py-1 rounded font-bold"><i class="fa-solid fa-keyboard"></i> Keyboard</button>
+        <div class="flex gap-2"><button onclick="closeMathEditor()" class="retro-btn bg-gray-200 font-mono text-xs px-3 py-1 rounded">Batal</button><button onclick="applyMath()" class="retro-btn bg-retro-green text-white font-mono text-xs font-bold px-3 py-1 rounded">Sisipkan</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-4 right-4 retro-window bg-retro-green text-white px-3 py-2 rounded font-mono text-xs transition-all duration-300 translate-y-20 opacity-0 z-50"><span id="toast-msg"></span></div>
+
+<style>.tb{padding:2px 8px;background:#f5f2e9;border:1px solid #3d3a34;border-radius:4px}.tb:hover{background:#f0d38d}</style>
+
+<script>
+// ================= STATE =================
+const K_F = 'utbk_studio_folders_v3', K_N = 'utbk_studio_notes_v3';
+let state = { folders: [], notes: [], folderId: null, noteId: null };
+let viewMode = false, rawHtml = '', saveTimer = null, savedRange = null, lastLatexDisplay = false;
+
+const defaultFolders = [
+  { id:'f1', name:'Penalaran Matematika', icon:'fa-calculator' },
+  { id:'f2', name:'TPS & Literasi', icon:'fa-brain' },
+  { id:'f3', name:'Rumus Cepat MTK', icon:'fa-square-root-variable' },
+  { id:'f4', name:'Bank Soal UTBK', icon:'fa-box-archive' }
+];
+const sampleText = `Catatan: Fungsi Kuadrat\nBlok teks soal di bawah ini lalu klik "Rapikan jadi Soal".\n\nSoal 1\nJika grafik fungsi $f(x) = x^2 - 4x + c$ menyinggung garis $y = 2$, tentukan nilai $c$.\n\n* A. 4\n* B. 5\n* C. 6\n* D. 7\n* E. 8\n\nKunci Jawaban: C. 6\nPembahasan:\nSyarat menyinggung adalah $D = 0$.\n\n1. $x^2 - 4x + c = 2 \\implies x^2 - 4x + (c - 2) = 0$\n2. $D = b^2 - 4ac = 0$\n$$(-4)^2 - 4(1)(c - 2) = 0$$\n$$24 - 4c = 0 \\implies c = 6$$`;
+
+const escapeHtml = s => s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+const escapeAttr = s => escapeHtml(s).replace(/"/g,'&quot;');
+const $ = id => document.getElementById(id);
+
+// ================= LOAD / SAVE =================
+function cardHtml(q) { return `<div class="soal-card" contenteditable="false" data-q="${encodeURIComponent(JSON.stringify(q))}"></div><div><br></div>`; }
+
+function migrate(n) {            // dukung data lama (questions / content)
+  if (n.html !== undefined) return n;
+  let h = '';
+  if (n.type === 'soal_paket' && n.questions)
+    h = n.questions.map(q => cardHtml(q) + (q.images||[]).concat(q.pembahasanImages||[]).map(u => `<img src="${escapeAttr(u)}">`).join('')).join('');
+  else h = n.content || '';
+  return { id:n.id, folderId:n.folderId, title:n.title, createdAt:n.createdAt, html:h };
+}
+
+function loadData() {
+  try {
+    state.folders = JSON.parse(localStorage.getItem(K_F)) || defaultFolders;
+    const raw = JSON.parse(localStorage.getItem(K_N));
+    state.notes = raw ? raw.map(migrate) : [{ id:'n1', folderId:'f1', title:'Contoh Catatan', html: escapeHtml(sampleText).replace(/\n/g,'<br>'), createdAt:new Date().toISOString() }];
+  } catch (e) { state.folders = defaultFolders; state.notes = []; }
+  saveData();
+}
+
+function saveData() {
+  let ok = true;
+  try { localStorage.setItem(K_F, JSON.stringify(state.folders)); localStorage.setItem(K_N, JSON.stringify(state.notes)); }
+  catch (e) { ok = false; toast('Penyimpanan penuh! Export JSON & kurangi gambar.'); }
+  updateStats();
+  return ok;
+}
+
+function updateStats() {
+  $('stat-folders').textContent = state.folders.length;
+  $('stat-notes').textContent = state.notes.length;
+  $('stat-soal').textContent = state.notes.reduce((a, n) => a + (n.html.match(/class="soal-card"/g) || []).length, 0);
+  const b = ((localStorage.getItem(K_F)||'').length + (localStorage.getItem(K_N)||'').length) * 2;
+  $('desktop-status-text').textContent = `Penyimpanan: ${(b/1048576).toFixed(1)} MB / ±5 MB`;
+}
+
+// ================= DESKTOP =================
+function renderDesktop() {
+  const left = $('desktop-folders-left'), right = $('desktop-folders-right');
+  left.innerHTML = ''; right.innerHTML = '';
+  state.folders.forEach((f, i) => {
+    const html = `
+    <div onclick="openFolder('${f.id}')" class="desktop-icon relative cursor-pointer p-3 rounded-lg border-2 border-retro-border bg-retro-card shadow-sm flex flex-col items-center text-center space-y-1.5">
+      <button onclick="event.stopPropagation();openIconPicker('${f.id}')" title="Ganti ikon" class="absolute top-1 left-1.5 text-xs text-gray-400 hover:text-retro-green p-1"><i class="fa-solid fa-icons"></i></button>
+      <button onclick="event.stopPropagation();deleteFolder('${f.id}')" title="Hapus folder" class="absolute top-1 right-1.5 text-xs text-gray-400 hover:text-red-500 p-1"><i class="fa-solid fa-trash"></i></button>
+      <div class="w-12 h-10 bg-retro-folder border-2 border-retro-border rounded flex items-center justify-center text-retro-border text-lg font-bold"><i class="fa-solid ${f.icon || 'fa-folder'}"></i></div>
+      <span class="font-mono text-xs font-bold text-retro-border truncate w-full">${escapeHtml(f.name)}</span>
+      <span class="font-mono text-[10px] bg-grid-bg border border-retro-border px-1.5 rounded text-gray-600">${state.notes.filter(n => n.folderId === f.id).length} file</span>
+    </div>`;
+    (i % 2 === 0 ? left : right).insertAdjacentHTML('beforeend', html);
+  });
+  updateStats();
+}
+
+function deleteFolder(id) {
+  const f = state.folders.find(x => x.id === id); if (!f) return;
+  const cnt = state.notes.filter(n => n.folderId === id).length;
+  if (!confirm(`Hapus folder "${f.name}"` + (cnt ? ` beserta ${cnt} file di dalamnya?` : '?') + ' Tindakan ini tidak bisa dibatalkan.')) return;
+  state.notes = state.notes.filter(n => n.folderId !== id);
+  state.folders = state.folders.filter(x => x.id !== id);
+  if (state.folderId === id) { state.folderId = null; closeFolder(); }
+  saveData(); renderDesktop(); toast('Folder dihapus.');
+}
+
+function openFolder(id) {
+  state.folderId = id;
+  const f = state.folders.find(x => x.id === id);
+  $('folder-title').textContent = 'C:\\UTBK\\' + f.name.replace(/\s+/g, '_');
+  renderFiles();
+  $('view-folder').classList.remove('hidden');
+}
+function closeFolder() { $('view-folder').classList.add('hidden'); }
+
+function renderFiles() {
+  const list = state.notes.filter(n => n.folderId === state.folderId);
+  $('folder-files').innerHTML = list.length ? list.map(n => {
+    const c = (n.html.match(/class="soal-card"/g) || []).length;
+    return `<div onclick="openNote('${n.id}')" class="retro-btn bg-white p-3 rounded-lg cursor-pointer flex justify-between items-start gap-2">
+      <div class="overflow-hidden">
+        <span class="font-mono text-[9px] font-bold px-1.5 rounded border border-retro-border ${c ? 'bg-retro-yellow' : 'bg-green-100'}">${c ? c + ' Soal' : 'Catatan'}</span>
+        <h4 class="font-mono font-bold text-xs mt-1 truncate">${escapeHtml(n.title)}</h4>
+        <span class="text-[10px] text-gray-500 font-mono">${new Date(n.createdAt).toLocaleDateString('id-ID')}</span>
+      </div>
+      <button onclick="event.stopPropagation();deleteNote('${n.id}')" class="text-xs text-gray-400 hover:text-red-500 p-1"><i class="fa-solid fa-trash"></i></button>
+    </div>`; }).join('')
+    : `<div class="col-span-2 text-center py-6 font-mono text-xs text-gray-500">Belum ada file. Klik "+ File Baru".</div>`;
+}
+
+function createNote() {
+  const n = { id:'n_' + Date.now(), folderId:state.folderId, title:'File Baru', html:'', createdAt:new Date().toISOString() };
+  state.notes.push(n); saveData(); openNote(n.id);
+}
+function deleteNote(id) {
+  if (!confirm('Hapus file ini?')) return;
+  state.notes = state.notes.filter(n => n.id !== id); saveData(); renderFiles(); renderDesktop();
+}
+
+// ================= WORKSPACE =================
+function openNote(id) {
+  const n = state.notes.find(x => x.id === id); if (!n) return;
+  state.noteId = id; viewMode = false; updateViewBtn();
+  $('note-title').value = n.title;
+  $('editor').contentEditable = 'true';
+  $('editor').innerHTML = n.html;
+  hydrateCards($('editor'));
+  closeFolder();
+  $('view-workspace').classList.remove('hidden');
+}
+
+function serialize() {
+  if (viewMode) return rawHtml;
+  const c = $('editor').cloneNode(true);
+  c.querySelectorAll('.soal-card').forEach(x => x.innerHTML = '');
+  return c.innerHTML;
+}
+
+function saveNote(silent) {
+  const n = state.notes.find(x => x.id === state.noteId); if (!n) return;
+  n.title = $('note-title').value || 'Tanpa Judul';
+  n.html = serialize();
+  if (saveData()) { $('save-state').textContent = 'tersimpan ' + new Date().toLocaleTimeString('id-ID', {hour12:false}); if (silent !== true) toast('File tersimpan!'); }
+}
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(() => saveNote(true), 800); }
+
+function closeWorkspace() {
+  saveNote(true);
+  if (viewMode) toggleView();
+  $('view-workspace').classList.add('hidden');
+  renderDesktop();
+}
+
+function updateViewBtn() {
+  $('btn-view').innerHTML = viewMode ? '<i class="fa-solid fa-pen"></i> Edit' : '<i class="fa-solid fa-eye"></i> Tampilan';
+  $('toolbar').classList.toggle('opacity-40', viewMode);
+  $('toolbar').classList.toggle('pointer-events-none', viewMode);
+}
+
+function toggleView() {          // Edit <-> Tampilan (semua rumus ter-render)
+  const ed = $('editor');
+  if (!viewMode) {
+    rawHtml = serialize(); viewMode = true;
+    ed.contentEditable = 'false'; renderMath(ed);
+  } else {
+    viewMode = false; ed.innerHTML = rawHtml; ed.contentEditable = 'true'; hydrateCards(ed);
+  }
+  updateViewBtn();
+}
+
+function execCmd(c, v = null) { $('editor').focus(); document.execCommand(c, false, v); scheduleSave(); }
+
+// ================= KARTU SOAL =================
+function renderMath(el) {
+  if (typeof renderMathInElement === 'function')
+    renderMathInElement(el, { delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false });
+}
+
+function renderCard(el) {
+  let q; try { q = JSON.parse(decodeURIComponent(el.dataset.q)); } catch (e) { return; }
+  el.contentEditable = 'false';
+  const opts = ['A','B','C','D','E'].map(L => `<div class="opt ${q.key === L ? 'key' : ''}"><b>${L}</b><span>${escapeHtml(q['opt' + L] || '-')}</span></div>`).join('');
+  el.innerHTML = `
+    <div class="q-actions"><button onclick="editCard(this)"><i class="fa-solid fa-pen"></i> Edit</button><button onclick="delCard(this)">&times;</button></div>
+    <span class="lbl">Soal:</span><div class="q-body">${escapeHtml(q.soal)}</div>
+    <div class="mt-2">${opts}</div>
+    ${q.pembahasan ? `<div class="pemb"><span class="lbl"><i class="fa-solid fa-circle-check"></i> Pembahasan${q.key ? ' (Kunci: ' + q.key + ')' : ''}:</span>${escapeHtml(q.pembahasan)}</div>` : ''}`;
+  renderMath(el);
+}
+function hydrateCards(root) { root.querySelectorAll('.soal-card').forEach(renderCard); }
+
+function qToText(q) {
+  return `Soal\n${q.soal}\n\n` + ['A','B','C','D','E'].map(L => q['opt' + L] ? `${L}. ${q['opt' + L]}` : '').filter(Boolean).join('\n')
+    + `\n\nKunci Jawaban: ${q.key || ''}\nPembahasan:\n${q.pembahasan || ''}`;
+}
+function editCard(btn) {         // balikin ke teks mentah supaya bisa diedit
+  const card = btn.closest('.soal-card');
+  const q = JSON.parse(decodeURIComponent(card.dataset.q));
+  const box = document.createElement('div');
+  box.innerHTML = qToText(q).split('\n').map(l => `<div>${escapeHtml(l) || '<br>'}</div>`).join('');
+  card.replaceWith(box);
+  scheduleSave();
+}
+function delCard(btn) { if (confirm('Hapus soal ini?')) { btn.closest('.soal-card').remove(); scheduleSave(); } }
+
+// ================= PARSER TEKS -> SOAL =================
+function protectMath(text) {
+  const store = [];
+  const keep = m => { store.push(m); return `\u27E6M${store.length - 1}\u27E7`; };
+  text = text.replace(/\$\$[\s\S]+?\$\$/g, keep)
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, x) => keep('$$' + x.trim() + '$$'))
+    .replace(/\\\(([\s\S]+?)\\\)/g, (_, x) => keep('$' + x.trim() + '$'))
+    .replace(/\$[^$\n]+?\$/g, keep)
+    .replace(/\\begin\{([a-zA-Z*]+)\}[\s\S]+?\\end\{\1\}/g, m => keep('$$' + m + '$$'));
+  return { text, store };
+}
+const restoreMath = (t, store) => t.replace(/\u27E6M(\d+)\u27E7/g, (_, i) => store[i]);
+
+function cleanBase(t) {
+  return t.replace(/\r\n?/g, '\n').replace(/[\u200B-\u200D\uFEFF\u00AD]/g, '').replace(/[\u00A0\u2007\u202F]/g, ' ')
+    .replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+const stripMd = t => t.replace(/\*\*(.+?)\*\*/g, '$1').replace(/__(.+?)__/g, '$1').replace(/^#{1,6}\s+/gm, '');
+
+function parseQuestions(text) {
+  const lines = text.split('\n').map(l => l.replace(/^\s*[-*•]\s+(?=\(?[A-Ea-e][.)]\s)/, '')).flatMap(l => {
+    const t = l.trim();
+    if (/^\(?[Aa][.)]\s/.test(t) && /\s\(?[B-Eb-e][.)]\s/.test(t)) return t.replace(/\s+(?=\(?[B-Eb-e][.)]\s)/g, '\n').split('\n');
+    return [l];
+  });
+  const START_EXPLICIT = /^(?:soal|no\.?|nomor|question)\s*(\d{1,3})\s*[.):\-]?\s*(.*)$/i;
+  const START_NUM = /^(\d{1,3})\s*[.)]\s+(.*)$/;
+  const OPT = /^\(?([A-Ea-e])[.)]\s+(.*)$/;
+  const KEY = /^(?:kunci(?:\s*jawaban)?|jawaban(?:\s*yang\s*benar)?|answer|correct answer)\s*[:=\-]?\s*\(?([A-Ea-e])\)?(?=$|[.):\s]).*$/i;
+  const EXP = /^(pembahasan|penyelesaian|solusi|penjelasan|explanation|solution)\b\s*[:：]?\s*(.*)$/i;
+  const hasOptAhead = i => lines.slice(i + 1, i + 9).some(l => /^\s*\(?[Aa][.)]\s+\S/.test(l));
+  const newQ = () => ({ soal:'', optA:'', optB:'', optC:'', optD:'', optE:'', key:'', pembahasan:'' });
+
+  const qs = []; let cur = null, mode = null, lastOpt = null;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) { if (mode === 'exp' && cur && !cur.pembahasan.endsWith('\n')) cur.pembahasan += '\n'; continue; }
+    const ms = line.match(START_EXPLICIT), mn = line.match(START_NUM);
+    if (ms || (mn && mode !== 'exp' && hasOptAhead(i)) || (mn && mode === 'exp' && hasOptAhead(i))) {
+      const m = ms || mn; cur = newQ(); cur.soal = m[2]; qs.push(cur); mode = 'soal'; lastOpt = null; continue;
+    }
+    if (!cur) { cur = newQ(); qs.push(cur); mode = 'soal'; }
+    let m;
+    if ((m = line.match(KEY))) { cur.key = m[1].toUpperCase(); continue; }
+    if ((m = line.match(EXP))) { mode = 'exp'; cur.pembahasan += m[2]; continue; }
+    if (mode !== 'exp' && (m = line.match(OPT))) { lastOpt = m[1].toUpperCase(); cur['opt' + lastOpt] = m[2]; mode = 'opt'; continue; }
+    if (mode === 'exp') cur.pembahasan += (cur.pembahasan && !cur.pembahasan.endsWith('\n') ? '\n' : '') + line;
+    else if (mode === 'opt' && lastOpt) cur['opt' + lastOpt] += ' ' + line;
+    else cur.soal += (cur.soal ? '\n' : '') + line;
+  }
+  return qs.map(q => { Object.keys(q).forEach(k => q[k] = q[k].trim()); return q; }).filter(q => q.soal);
+}
+const countOpts = q => ['optA','optB','optC','optD','optE'].filter(k => q[k]).length;
+
+function selectionText(range) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;left:-9999px;top:0;white-space:pre-wrap';
+  d.appendChild(range.cloneContents()); document.body.appendChild(d);
+  const t = d.innerText; d.remove(); return t;
+}
+
+// ===== TOMBOL UTAMA: blok teks -> klik -> jadi kartu soal =====
+function convertSelection() {
+  if (viewMode) { toast('Kembali ke mode Edit dulu.'); return; }
+  const sel = window.getSelection(), ed = $('editor');
+  if (!sel.rangeCount || sel.isCollapsed || !ed.contains(sel.anchorNode)) { toast('Blok dulu teks soalnya, baru klik tombol ini.'); return; }
+  const range = sel.getRangeAt(0);
+  const { text, store } = protectMath(selectionText(range));
+  let qs = parseQuestions(stripMd(cleanBase(text))).filter(q => countOpts(q) >= 2);
+  if (!qs.length) { toast('Soal tidak terdeteksi. Pastikan ada opsi A. B. C. ...'); return; }
+  qs = qs.map(q => { Object.keys(q).forEach(k => q[k] = restoreMath(q[k], store)); return q; });
+
+  range.deleteContents();
+  const frag = document.createDocumentFragment();
+  qs.forEach(q => {
+    const c = document.createElement('div');
+    c.className = 'soal-card'; c.dataset.q = encodeURIComponent(JSON.stringify(q));
+    renderCard(c); frag.appendChild(c);
+  });
+  range.insertNode(frag);
+  sel.removeAllRanges();
+  const noKey = qs.filter(q => !q.key).length;
+  toast(`${qs.length} soal dirapikan` + (noKey ? ` (${noKey} tanpa kunci)` : '') + '!');
+  scheduleSave();
+}
+
+// ================= RUMUS =================
+['\\frac{a}{b}|\\frac{a}{b}','\\sqrt{x}|\\sqrt{x}','x^{2}|x²','\\int_{a}^{b}|∫','\\sum_{i=1}^{n}|∑','\\lim_{x \\to \\infty}|lim','\\pm|±','\\neq|≠','\\leq|≤','\\geq|≥','\\infty|∞','\\alpha|α','\\beta|β','\\theta|θ']
+  .forEach(s => { const [tex, label] = s.split('|'); const b = document.createElement('button'); b.className = 'tb'; b.textContent = label;
+    b.onmousedown = e => e.preventDefault(); b.onclick = () => insertText(` $${tex}$ `); $('math-btns').appendChild(b); });
+
+function insertText(t) {
+  if (viewMode) return;
+  $('editor').focus(); restoreRange(); document.execCommand('insertText', false, t); scheduleSave();
+}
+document.addEventListener('selectionchange', () => {
+  const s = window.getSelection();
+  if (s.rangeCount && $('editor').contains(s.anchorNode)) savedRange = s.getRangeAt(0).cloneRange();
+});
+function restoreRange() {
+  if (!savedRange) return;
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange);
+}
+
+function openMathEditor() {
+  if (viewMode) return;
+  if (!customElements.get('math-field')) { toast('MathLive belum termuat. Cek internet.'); return; }
+  $('mf').value = ''; $('mf-display').checked = false;
+  $('modal-math').classList.remove('hidden');
+  setTimeout(() => { $('mf').focus(); window.mathVirtualKeyboard && window.mathVirtualKeyboard.show(); }, 80);
+}
+function closeMathEditor() { $('modal-math').classList.add('hidden'); window.mathVirtualKeyboard && window.mathVirtualKeyboard.hide(); }
+function toggleKb() { const k = window.mathVirtualKeyboard; if (!k) return; k.visible ? k.hide() : k.show(); $('mf').focus(); }
+function applyMath() {
+  const l = $('mf').value.trim(), d = $('mf-display').checked;
+  closeMathEditor(); if (!l) return;
+  insertText(d ? `\n$$${l}$$\n` : ` $${l}$ `);
+}
+
+// ================= GAMBAR & PASTE =================
+function compressImage(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => { const img = new Image(); img.onload = () => {
+      const sc = Math.min(1, 1000 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      res(c.toDataURL('image/jpeg', .82)); }; img.onerror = rej; img.src = r.result; };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+function insertImg(url) { $('editor').focus(); restoreRange(); document.execCommand('insertHTML', false, `<img src="${escapeAttr(url)}"><br>`); scheduleSave(); }
+function pickImage() {
+  const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.multiple = true;
+  i.onchange = async () => { for (const f of i.files) insertImg(await compressImage(f)); };
+  i.click();
+}
+
+$('editor').addEventListener('paste', async e => {
+  e.preventDefault();
+  const cd = e.clipboardData, imgs = [...cd.files].filter(f => f.type.startsWith('image/'));
+  if (imgs.length) { for (const f of imgs) insertImg(await compressImage(f)); toast('Gambar ditempel!'); return; }
+  const t = cd.getData('text/plain').replace(/\r\n?/g, '\n').replace(/[\u200B-\u200D\uFEFF\u00AD]/g, '').replace(/\u00A0/g, ' ');
+  document.execCommand('insertText', false, t);   // selalu teks polos, $...$ aman
+});
+$('editor').addEventListener('input', scheduleSave);
+
+// ================= PDF =================
+function downloadPDF() {
+  const was = viewMode;
+  if (!was) toggleView();
+  const el = $('paper'); el.classList.add('pdfing');
+  const title = ($('note-title').value || 'UTBK_Note').replace(/\s+/g, '_');
+  toast('Mengompilasi PDF...');
+  html2pdf().from(el).set({ margin: 10, filename: title + '.pdf', image:{type:'jpeg',quality:.98}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} })
+    .save().then(() => { el.classList.remove('pdfing'); if (!was) toggleView(); });
+}
+
+// ================= JSON =================
+function exportDataJSON() {
+  const a = document.createElement('a');
+  a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({ folders: state.folders, notes: state.notes }, null, 2));
+  a.download = `utbk_prep_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); toast('Berhasil diexport!');
+}
+function importDataJSON(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const p = JSON.parse(e.target.result);
+      if (!p.folders || !p.notes) return alert('Format JSON tidak valid!');
+      state.folders = p.folders; state.notes = p.notes.map(migrate); saveData(); renderDesktop(); toast('Berhasil diimport!');
+    } catch (err) { alert('Gagal membaca file JSON.'); }
+    ev.target.value = '';
+  };
+  r.readAsText(f, 'UTF-8');
+}
+
+// ================= FOLDER & UTIL =================
+const ICONS = ['fa-folder','fa-calculator','fa-square-root-variable','fa-brain','fa-box-archive','fa-flask','fa-atom','fa-dna','fa-microscope','fa-book','fa-book-open','fa-language','fa-pen-nib','fa-globe','fa-earth-asia','fa-landmark','fa-scale-balanced','fa-code','fa-chart-line','fa-lightbulb','fa-star','fa-bookmark','fa-graduation-cap','fa-clock','fa-music','fa-palette','fa-heart','fa-rocket','fa-fire','fa-leaf'];
+let newFolderIcon = 'fa-folder';
+
+function iconGrid(box, selected, onPick) {
+  box.innerHTML = ICONS.map(ic => `<button type="button" data-ic="${ic}" class="w-9 h-9 border-2 border-retro-border rounded flex items-center justify-center ${ic === selected ? 'bg-retro-folder' : 'bg-white hover:bg-retro-yellow'}"><i class="fa-solid ${ic}"></i></button>`).join('');
+  box.querySelectorAll('button').forEach(b => b.onclick = () => onPick(b.dataset.ic));
+}
+function renderNewFolderIcons() { iconGrid($('new-folder-icons'), newFolderIcon, ic => { newFolderIcon = ic; renderNewFolderIcons(); }); }
+
+function openIconPicker(folderId) {
+  const f = state.folders.find(x => x.id === folderId); if (!f) return;
+  iconGrid($('icon-grid'), f.icon || 'fa-folder', ic => { f.icon = ic; saveData(); renderDesktop(); closeModal('modal-icon'); toast('Ikon diganti!'); });
+  openModal('modal-icon');
+}
+
+function openModal(id) { if (id === 'modal-folder') { newFolderIcon = 'fa-folder'; renderNewFolderIcons(); } $(id).classList.remove('hidden'); }
+function closeModal(id) { $(id).classList.add('hidden'); }
+function saveFolder(e) {
+  e.preventDefault();
+  const name = $('new-folder-name').value.trim(); if (!name) return;
+  state.folders.push({ id:'f_' + Date.now(), name, icon:newFolderIcon });
+  saveData(); renderDesktop(); closeModal('modal-folder'); $('new-folder-name').value = '';
+}
+function toast(msg) {
+  const t = $('toast'); $('toast-msg').textContent = msg;
+  t.classList.remove('translate-y-20', 'opacity-0');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
+}
+document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 's' && state.noteId && !$('view-workspace').classList.contains('hidden')) { e.preventDefault(); saveNote(); } });
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadData(); renderDesktop();
+  const tick = () => $('clock').textContent = new Date().toLocaleTimeString('id-ID', { hour12:false });
+  tick(); setInterval(tick, 1000);
+});
+</script>
+</body>
+</html>
